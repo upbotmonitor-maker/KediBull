@@ -1,0 +1,29 @@
+[
+  {
+    "id": 1,
+    "isim": "Pamuk",
+    "ilce": "Ortahisar",
+    "tarih": "2026-06-15",
+    "ozellik": "Beyaz tüylü, mavi gözlü, küçük siyah bir leke sol kulağında.",
+    "foto": "https://i.imgur.com/h7X44PL.jpeg",
+    "sahipMail": "clashen60@gmail.com"
+  },
+  {
+    "id": 2,
+    "isim": "Zeytin",
+    "ilce": "Akçaabat",
+    "tarih": "2026-06-18",
+    "ozellik": "Sarı tüylü, kahverengi gözlü, tasmasında küçük bir zil var.",
+    "foto": "https://i.imgur.com/dBFWB6W.jpeg",
+    "sahipMail": "b48492401@gmail.com"
+  },
+  {
+    "id": 3,
+    "isim": "Maviş",
+    "ilce": "Çaykara",
+    "tarih": "2026-06-20",
+    "ozellik": "Kırçıllı gri, yeşil gözlü, sağ arka patisinde beyaz bir leke.",
+    "foto": "https://i.imgur.com/kzJS5Q0.jpeg",
+    "sahipMail": "m76887136@gmail.com"
+  }
+]
