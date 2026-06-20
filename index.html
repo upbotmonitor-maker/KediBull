@@ -1,0 +1,425 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>KediBull Trabzon – Kayıp Kedi Bulma</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Font Awesome 6 (ücretsiz) -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
+    <style>
+        /* Geçişler ve özel stiller */
+        .modal-overlay {
+            transition: opacity 0.3s ease;
+        }
+        .modal-overlay.hidden {
+            opacity: 0;
+            pointer-events: none;
+        }
+        .modal-content {
+            transition: transform 0.3s ease;
+            transform: scale(0.95);
+        }
+        .modal-overlay:not(.hidden) .modal-content {
+            transform: scale(1);
+        }
+        /* Gmail M logosu SVG */
+        .gmail-m-icon {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            flex-shrink: 0;
+        }
+        .gmail-m-icon svg {
+            width: 100%;
+            height: 100%;
+            display: block;
+        }
+        /* Kartlardaki resim oranı */
+        .card-img {
+            aspect-ratio: 16 / 9;
+            object-fit: cover;
+        }
+        /* Filtre dropdown */
+        select {
+            appearance: none;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3E%3Cpath stroke='%236B7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3E%3C/svg%3E");
+            background-position: right 0.75rem center;
+            background-repeat: no-repeat;
+            background-size: 1.5rem 1.5rem;
+            padding-right: 2.5rem;
+        }
+        /* Footer vs. */
+        body {
+            font-family: 'Inter', system-ui, -apple-system, sans-serif;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- HEADER -->
+    <header class="sticky top-0 z-30 bg-gradient-to-r from-amber-600 to-orange-600 text-white shadow-lg">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 py-3 flex items-center justify-between flex-wrap gap-2">
+            <!-- Logo -->
+            <a href="#" class="flex items-center gap-2 text-2xl font-bold tracking-tight">
+                <i class="fas fa-paw text-3xl"></i>
+                <span>KediBull <span class="text-sm font-normal text-amber-100">Trabzon</span></span>
+            </a>
+            <!-- Sağ butonlar -->
+            <div class="flex items-center gap-2">
+                <button id="ilanEkleBtn" class="bg-white/20 hover:bg-white/30 text-white px-4 py-2 rounded-full flex items-center gap-2 transition text-sm font-medium">
+                    <i class="fas fa-plus-circle"></i> İlan Ekle
+                </button>
+                <button id="bizKimizBtn" class="bg-white/10 hover:bg-white/20 text-white px-4 py-2 rounded-full flex items-center gap-2 transition text-sm font-medium">
+                    <i class="fas fa-info-circle"></i> Biz Kimiz?
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- ANA KONTEYNER -->
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 py-6">
+
+        <!-- Filtre Alanı -->
+        <div class="mb-8 flex flex-col sm:flex-row items-start sm:items-center gap-4 bg-white p-4 rounded-2xl shadow-sm border border-gray-200">
+            <label for="ilceFiltre" class="flex items-center gap-2 text-gray-700 font-medium">
+                <i class="fas fa-map-pin text-amber-600"></i>
+                <span>İlçe Seçin:</span>
+            </label>
+            <select id="ilceFiltre" class="w-full sm:w-64 border border-gray-300 rounded-xl px-4 py-2.5 pr-10 bg-gray-50 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent transition">
+                <option value="all">Tüm İlçeler</option>
+                <!-- Trabzon ilçeleri (alfabetik) -->
+                <option value="Akçaabat">Akçaabat</option>
+                <option value="Araklı">Araklı</option>
+                <option value="Arsin">Arsin</option>
+                <option value="Beşikdüzü">Beşikdüzü</option>
+                <option value="Çarşıbaşı">Çarşıbaşı</option>
+                <option value="Çaykara">Çaykara</option>
+                <option value="Dernekpazarı">Dernekpazarı</option>
+                <option value="Düzköy">Düzköy</option>
+                <option value="Hayrat">Hayrat</option>
+                <option value="Köprübaşı">Köprübaşı</option>
+                <option value="Maçka">Maçka</option>
+                <option value="Of">Of</option>
+                <option value="Ortahisar">Ortahisar</option>
+                <option value="Sürmene">Sürmene</option>
+                <option value="Şalpazarı">Şalpazarı</option>
+                <option value="Tonya">Tonya</option>
+                <option value="Vakfıkebir">Vakfıkebir</option>
+                <option value="Yomra">Yomra</option>
+            </select>
+            <span id="sonucSayisi" class="ml-auto text-sm text-gray-500 bg-gray-100 px-3 py-1 rounded-full"></span>
+        </div>
+
+        <!-- İlan Kartları Grid -->
+        <div id="kartlar" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <!-- JS ile doldurulacak -->
+        </div>
+
+        <!-- Yükleniyor / Hata -->
+        <div id="loading" class="text-center py-20 text-gray-500">
+            <i class="fas fa-spinner fa-spin text-4xl text-amber-500"></i>
+            <p class="mt-4">İlanlar yükleniyor...</p>
+        </div>
+    </main>
+
+    <!-- ========== MODAL: İLAN EKLE ========== -->
+    <div id="ilanModal" class="modal-overlay hidden fixed inset-0 z-50 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4">
+        <div class="modal-content bg-white rounded-3xl shadow-2xl max-w-lg w-full max-h-[90vh] overflow-y-auto p-6">
+            <div class="flex justify-between items-center mb-5">
+                <h3 class="text-2xl font-bold text-gray-800 flex items-center gap-2">
+                    <i class="fas fa-pencil-alt text-amber-600"></i> Yeni İlan Ekle
+                </h3>
+                <button class="ilanModalKapat text-gray-400 hover:text-gray-600 text-2xl">&times;</button>
+            </div>
+            <form id="ilanForm" class="space-y-4">
+                <!-- Kedi Adı -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Kedi Adı <span class="text-red-500">*</span></label>
+                    <input type="text" id="formAd" required class="w-full border border-gray-300 rounded-xl px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-amber-500" placeholder="Örn: Pamuk" />
+                </div>
+                <!-- İlçe -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Kaybolduğu İlçe <span class="text-red-500">*</span></label>
+                    <select id="formIlce" required class="w-full border border-gray-300 rounded-xl px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-amber-500 bg-white">
+                        <option value="">Seçiniz</option>
+                        <option value="Akçaabat">Akçaabat</option>
+                        <option value="Araklı">Araklı</option>
+                        <option value="Arsin">Arsin</option>
+                        <option value="Beşikdüzü">Beşikdüzü</option>
+                        <option value="Çarşıbaşı">Çarşıbaşı</option>
+                        <option value="Çaykara">Çaykara</option>
+                        <option value="Dernekpazarı">Dernekpazarı</option>
+                        <option value="Düzköy">Düzköy</option>
+                        <option value="Hayrat">Hayrat</option>
+                        <option value="Köprübaşı">Köprübaşı</option>
+                        <option value="Maçka">Maçka</option>
+                        <option value="Of">Of</option>
+                        <option value="Ortahisar">Ortahisar</option>
+                        <option value="Sürmene">Sürmene</option>
+                        <option value="Şalpazarı">Şalpazarı</option>
+                        <option value="Tonya">Tonya</option>
+                        <option value="Vakfıkebir">Vakfıkebir</option>
+                        <option value="Yomra">Yomra</option>
+                    </select>
+                </div>
+                <!-- Tarih -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Kaybolma Tarihi <span class="text-red-500">*</span></label>
+                    <input type="date" id="formTarih" required class="w-full border border-gray-300 rounded-xl px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-amber-500" />
+                </div>
+                <!-- Özellikler -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Ayırt Edici Özellikler</label>
+                    <textarea id="formOzellik" rows="3" class="w-full border border-gray-300 rounded-xl px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-amber-500" placeholder="Örn: Beyaz, mavi gözlü, tüyleri uzun..."></textarea>
+                </div>
+                <!-- Fotoğraf URL -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Fotoğraf URL (bağlantı)</label>
+                    <input type="url" id="formFoto" class="w-full border border-gray-300 rounded-xl px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-amber-500" placeholder="https://ornek.com/foto.jpg" />
+                </div>
+                <!-- Sahip Mail -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">İletişim Mail <span class="text-red-500">*</span></label>
+                    <input type="email" id="formMail" required class="w-full border border-gray-300 rounded-xl px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-amber-500" placeholder="sahip@ornek.com" />
+                </div>
+                <!-- Buton -->
+                <button type="submit" class="w-full bg-amber-600 hover:bg-amber-700 text-white font-semibold py-3 rounded-xl transition flex items-center justify-center gap-2">
+                    <i class="fas fa-paper-plane"></i> İlanı Gönder
+                </button>
+                <p class="text-xs text-gray-400 text-center mt-2">İlanınız site sahibine mail olarak iletilecektir.</p>
+            </form>
+        </div>
+    </div>
+
+    <!-- ========== MODAL: BİZ KİMİZ? ========== -->
+    <div id="hakkimizdaModal" class="modal-overlay hidden fixed inset-0 z-50 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4">
+        <div class="modal-content bg-white rounded-3xl shadow-2xl max-w-lg w-full p-6">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="text-2xl font-bold text-gray-800 flex items-center gap-2">
+                    <i class="fas fa-users text-amber-600"></i> Biz Kimiz?
+                </h3>
+                <button class="hakkimizdaModalKapat text-gray-400 hover:text-gray-600 text-2xl">&times;</button>
+            </div>
+            <div class="text-gray-700 space-y-3 text-base leading-relaxed">
+                <p>
+                    <i class="fas fa-paw text-amber-600 mr-2"></i>
+                    <strong>KediBull Trabzon</strong>, yalnızca Trabzon ilinde kaybolan kedileri sahipleriyle buluşturmayı amaçlayan, tamamen gönüllü bir platformdur.
+                </p>
+                <p>
+                    Bu site, hiçbir ticari kaygı gütmeden, sevgiyle oluşturulmuştur. Her kayıp kedi, bir ailenin yüreğidir. Biz de bu yürekleri bir araya getirmek için buradayız.
+                </p>
+                <p class="bg-amber-50 p-4 rounded-xl border border-amber-200 text-amber-800">
+                    <i class="fas fa-map-pin mr-2"></i>
+                    Sadece <strong>Trabzon</strong> genelinde hizmet veriyoruz. İlçe filtresiyle aradığınız kediyi kolayca bulabilirsiniz.
+                </p>
+                <p>
+                    <i class="fas fa-envelope text-amber-600 mr-2"></i>
+                    İletişim: <a href="mailto:kedibull.trabzon@gmail.com" class="text-amber-700 underline">kedibull.trabzon@gmail.com</a>
+                </p>
+                <div class="text-sm text-gray-400 border-t pt-4 mt-4">
+                    <i class="fas fa-heart text-red-400"></i> Sevgiyle, KediBull Ekibi
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ========== JAVASCRIPT ========== -->
+    <script>
+        (function() {
+            'use strict';
+
+            // DOM referansları
+            const kartlarEl = document.getElementById('kartlar');
+            const loadingEl = document.getElementById('loading');
+            const filtreSelect = document.getElementById('ilceFiltre');
+            const sonucSayisi = document.getElementById('sonucSayisi');
+
+            // Modal elemanları
+            const ilanModal = document.getElementById('ilanModal');
+            const ilanEkleBtn = document.getElementById('ilanEkleBtn');
+            const ilanModalKapatlar = document.querySelectorAll('.ilanModalKapat');
+            const hakkimizdaModal = document.getElementById('hakkimizdaModal');
+            const bizKimizBtn = document.getElementById('bizKimizBtn');
+            const hakkimizdaKapatlar = document.querySelectorAll('.hakkimizdaModalKapat');
+            const ilanForm = document.getElementById('ilanForm');
+
+            // State
+            let tumKediler = [];
+            let filtrelenmisKediler = [];
+
+            // ---------- MODAL KONTROLLER ----------
+            function modalAc(modal) {
+                modal.classList.remove('hidden');
+                document.body.style.overflow = 'hidden';
+            }
+
+            function modalKapat(modal) {
+                modal.classList.add('hidden');
+                document.body.style.overflow = '';
+            }
+
+            // İlan Ekle Modal
+            ilanEkleBtn.addEventListener('click', () => modalAc(ilanModal));
+            ilanModalKapatlar.forEach(btn => btn.addEventListener('click', () => modalKapat(ilanModal)));
+            ilanModal.addEventListener('click', (e) => {
+                if (e.target === ilanModal) modalKapat(ilanModal);
+            });
+
+            // Biz Kimiz Modal
+            bizKimizBtn.addEventListener('click', () => modalAc(hakkimizdaModal));
+            hakkimizdaKapatlar.forEach(btn => btn.addEventListener('click', () => modalKapat(hakkimizdaModal)));
+            hakkimizdaModal.addEventListener('click', (e) => {
+                if (e.target === hakkimizdaModal) modalKapat(hakkimizdaModal);
+            });
+
+            // ---------- İLAN EKLEME FORMU (mailto) ----------
+            ilanForm.addEventListener('submit', function(e) {
+                e.preventDefault();
+
+                const ad = document.getElementById('formAd').value.trim();
+                const ilce = document.getElementById('formIlce').value;
+                const tarih = document.getElementById('formTarih').value;
+                const ozellik = document.getElementById('formOzellik').value.trim();
+                const foto = document.getElementById('formFoto').value.trim();
+                const mail = document.getElementById('formMail').value.trim();
+
+                if (!ad || !ilce || !tarih || !mail) {
+                    alert('Lütfen tüm zorunlu alanları doldurun.');
+                    return;
+                }
+
+                // Mail içeriği
+                const konu = encodeURIComponent('Yeni Kayıp Kedi İlanı (KediBull Trabzon)');
+                const govde = encodeURIComponent(
+                    `Merhaba,\n\nYeni bir kayıp kedi ilanı eklendi:\n\n` +
+                    `Kedi Adı: ${ad}\n` +
+                    `İlçe: ${ilce}\n` +
+                    `Tarih: ${tarih}\n` +
+                    `Özellikler: ${ozellik || 'Belirtilmemiş'}\n` +
+                    `Fotoğraf: ${foto || 'Belirtilmemiş'}\n` +
+                    `İlan sahibi e-posta: ${mail}\n\n` +
+                    `İlanı inceleyip yayınlayabilirsiniz.\n\n` +
+                    `Sevgiler, KediBull Trabzon`
+                );
+                window.location.href = `mailto:kedibull.trabzon@gmail.com?subject=${konu}&body=${govde}`;
+
+                // Modal'ı kapat
+                modalKapat(ilanModal);
+                ilanForm.reset();
+            });
+
+            // ---------- KARTLARI OLUŞTUR ----------
+            function renderKartlar(kediler) {
+                if (!kediler || kediler.length === 0) {
+                    kartlarEl.innerHTML = `
+                        <div class="col-span-full text-center py-12 text-gray-400">
+                            <i class="fas fa-search fa-3x mb-3"></i>
+                            <p class="text-lg">Bu ilçede kayıp ilanı bulunamadı.</p>
+                        </div>
+                    `;
+                    sonucSayisi.textContent = '0 ilan';
+                    return;
+                }
+
+                let html = '';
+                kediler.forEach(k => {
+                    // Gmail M logosu (SVG)
+                    const gmailSvg = `
+                        <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                            <path fill="#EA4335" d="M24 12.5v7.5c0 1.1-.9 2-2 2H2c-1.1 0-2-.9-2-2V12.5l10.4 6.3c.5.3 1.1.5 1.6.5s1.1-.2 1.6-.5L24 12.5z"/>
+                            <path fill="#34A853" d="M24 6.5v6l-10.4 6.3c-.5.3-1.1.5-1.6.5s-1.1-.2-1.6-.5L0 12.5v-6c0-1.1.9-2 2-2h20c1.1 0 2 .9 2 2z"/>
+                            <path fill="#FBBC04" d="M0 6.5l10.4 6.3c.5.3 1.1.5 1.6.5s1.1-.2 1.6-.5L24 6.5v-1c0-1.1-.9-2-2-2H2c-1.1 0-2 .9-2 2v1z"/>
+                            <path fill="#4285F4" d="M0 5.5l10.4 6.3c.5.3 1.1.5 1.6.5s1.1-.2 1.6-.5L24 5.5v-1c0-1.1-.9-2-2-2H2c-1.1 0-2 .9-2 2v1z"/>
+                        </svg>
+                    `;
+
+                    html += `
+                        <div class="bg-white rounded-2xl shadow-md hover:shadow-xl transition overflow-hidden border border-gray-200 flex flex-col">
+                            <img src="${k.foto || 'https://via.placeholder.com/400x225?text=Kedi+Resmi'}" alt="${k.isim}" class="card-img w-full" loading="lazy" onerror="this.src='https://via.placeholder.com/400x225?text=Foto+Yok'">
+                            <div class="p-4 flex-1 flex flex-col">
+                                <h3 class="text-xl font-bold text-gray-800">${k.isim}</h3>
+                                <div class="flex items-center gap-2 text-sm text-gray-600 mt-1">
+                                    <i class="fas fa-map-pin text-amber-600"></i>
+                                    <span>${k.ilce}</span>
+                                </div>
+                                <div class="flex items-center gap-2 text-sm text-gray-600">
+                                    <i class="fas fa-calendar-alt text-amber-600"></i>
+                                    <span>${k.tarih || 'Belirtilmemiş'}</span>
+                                </div>
+                                <div class="mt-2 text-sm text-gray-700 flex-1">
+                                    <span class="font-medium">Özellikler:</span> ${k.ozellik || 'Belirtilmemiş'}
+                                </div>
+                                <!-- Butonlar -->
+                                <div class="mt-4 flex flex-wrap gap-2">
+                                    <!-- Gördüm -->
+                                    <a href="mailto:${k.sahipMail}?subject=[KediBull Trabzon - Kayıp Kedi] - ${encodeURIComponent(k.isim)} 'nı Gördüm!" 
+                                       class="flex-1 min-w-[100px] text-center bg-blue-50 hover:bg-blue-100 text-blue-700 text-sm font-medium px-3 py-2 rounded-full transition flex items-center justify-center gap-1">
+                                        <i class="fas fa-eye"></i> Gördüm!
+                                    </a>
+                                    <!-- İpucum Var -->
+                                    <a href="mailto:${k.sahipMail}?subject=[KediBull Trabzon - Kayıp Kedi] - ${encodeURIComponent(k.isim)} Hakkında İpucu" 
+                                       class="flex-1 min-w-[100px] text-center bg-green-50 hover:bg-green-100 text-green-700 text-sm font-medium px-3 py-2 rounded-full transition flex items-center justify-center gap-1">
+                                        <i class="fas fa-lightbulb"></i> İpucum Var
+                                    </a>
+                                    <!-- İletişime Geç (Gmail M logosu) -->
+                                    <a href="mailto:${k.sahipMail}" 
+                                       class="flex-1 min-w-[130px] text-center bg-red-50 hover:bg-red-100 text-red-700 text-sm font-medium px-3 py-2 rounded-full transition flex items-center justify-center gap-1.5">
+                                        <span class="gmail-m-icon">${gmailSvg}</span>
+                                        İletişime Geç
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                });
+
+                kartlarEl.innerHTML = html;
+                sonucSayisi.textContent = `${kediler.length} ilan`;
+            }
+
+            // ---------- FİLTRELEME ----------
+            function filtrele() {
+                const secilen = filtreSelect.value;
+                if (secilen === 'all') {
+                    filtrelenmisKediler = tumKediler;
+                } else {
+                    filtrelenmisKediler = tumKediler.filter(k => k.ilce === secilen);
+                }
+                renderKartlar(filtrelenmisKediler);
+            }
+
+            filtreSelect.addEventListener('change', filtrele);
+
+            // ---------- VERİYİ ÇEK ----------
+            async function veriyiGetir() {
+                try {
+                    loadingEl.classList.remove('hidden');
+                    const res = await fetch('data.json');
+                    if (!res.ok) throw new Error('data.json okunamadı');
+                    const data = await res.json();
+                    tumKediler = data;
+                    filtrelenmisKediler = data;
+                    renderKartlar(data);
+                } catch (err) {
+                    kartlarEl.innerHTML = `
+                        <div class="col-span-full text-center py-12 text-red-500">
+                            <i class="fas fa-exclamation-triangle fa-3x mb-3"></i>
+                            <p class="text-lg">Veriler yüklenirken hata oluştu.</p>
+                            <p class="text-sm">Lütfen data.json dosyasının varlığını kontrol edin.</p>
+                        </div>
+                    `;
+                    sonucSayisi.textContent = '0 ilan';
+                } finally {
+                    loadingEl.classList.add('hidden');
+                }
+            }
+
+            veriyiGetir();
+
+        })();
+    </script>
+
+</body>
+</html>
